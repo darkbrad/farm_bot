@@ -9,6 +9,7 @@ class States(Enum):
     S_CHOOSE_ITEM="3"
     S_CHOOSE_MEAT="4"
     S_MAKE_ORDER="5"
+    S_MAKE_ORDER_MILK="6"
 
 class Users():
     def __init__(self,id:Optional[int],status:Optional[int]):

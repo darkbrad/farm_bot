@@ -1,3 +1,5 @@
+import sqlite3
+
 import dbworker
 import config
 import telebot
@@ -22,15 +24,22 @@ def msg_hand(bot,message):
 def get_by_key(key:str):
     dict={"Утка":"уток",
           "Курица":"куриц",
-          "Гусь":"гусей"}
+          "Гусь":"гусей",
+          "Яйца":"десятков яиц",
+        "Молоко":"литров молока"}
     value=dict.get(key)
     return value
-def item_desc(message:telebot.types.Message,bot:telebot.TeleBot,desc:str,reply_markup):
-    line=f'''{desc}
-    
+def item_desc(message:telebot.types.Message,conn:sqlite3.Connection):
+    cur=conn.cursor()
+    if type(message)==str:
+        cur.execute("SELECT description, price FROM Items WHERE name=?", (message,))
+    else:cur.execute("SELECT description, price FROM Items WHERE name=?",(message.text,))
+    row=cur.fetchone()
+    desc,price=row
+    cur.close()
+    return desc,price
 
-Сколько {get_by_key(message.text)} вы хотите заказать?'''
-    bot.send_message(message.chat.id,line,reply_markup=reply_markup)
+
 
 
 def meat_msg(bot,user,message):
