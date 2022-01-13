@@ -1,12 +1,17 @@
 from enum import Enum
+from typing import Optional
 
 class States(Enum):
 
     S_START = "0"  # Начало нового диалога
-    S_ENTER_NAME = "1"
-    S_ENTER_AGE = "2"
+    S_ENTER_EMAIL = "1"
+    S_ENTER_NAME = "2"
+    S_CHOOSE_ITEM="3"
+    S_CHOOSE_MEAT="4"
 
 class Users():
-    def __init__(self,id,status):
+    def __init__(self,id:Optional[int],status:Optional[int]):
         self.id=id
         self.status=status
+
+

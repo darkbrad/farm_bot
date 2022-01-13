@@ -1,8 +1,8 @@
 import logging
 import telebot
-
-
-
+from button import buttons1,buttons2,buttons3
+from db import get_connection
+import sqlite3
 import config
 import dbworker
 
@@ -13,48 +13,86 @@ bot = telebot.TeleBot(token)
 logging.basicConfig(level=logging.INFO)
 messages=[]
 mass=['Адрес доставки',"Имя"]
-user_id=''
+user_id='1'
+user=config.Users(None,None)
+
+
+
+
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
     global user_id
+    global user
     user_id=message.chat.id
-    keyboard = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    button_1 = telebot.types.KeyboardButton(text="Присоединиться")
-    keyboard.add(button_1)
-    button_2 = "Связь с человеком"
-    keyboard.add(button_2)
-    user=config.Users(id=user_id,status=config.States.S_ENTER_NAME.value)
-    dbworker.set_status(user, config.States.S_ENTER_NAME.value)
-    bot.send_message(message.chat.id,"Вас привествует FarmBot!", reply_markup=keyboard)
+    user = config.Users(id=user_id, status=config.States.S_START.value)
 
-user=config.Users(id=user_id,status=config.States.S_ENTER_NAME.value)
-print(user.id)
+    bot.send_message(message.chat.id,"Вас привествует FarmBot!", reply_markup=buttons1())
+    bot.send_message(message.chat.id,user.status)
+
+
 def data_input(text):
     return f"Введите {text}"
 
+@bot.message_handler(commands=['reset'])
+def cmd_reset(message:telebot.types.Message):
+    global mass
+    bot.send_message(message.chat.id,f"Данные сброшены.{data_input(mass[0])}")
+    global messages
+    global user
+    with get_connection() as conn:
+      dbworker.delete_code(message,conn)
+    messages.clear()
 
-@bot.message_handler()
+
+    dbworker.set_status(user, config.States.S_ENTER_EMAIL.value)
+
+@bot.message_handler(func=lambda message: dbworker.get_current_status(user) == config.States.S_ENTER_EMAIL.value)
+def user_entering_name(message):
+    global mass
+    global messages
+    messages.append(message.text)
+    bot.send_message(message.chat.id, f"Введите {mass[1]}")
+    global user
+    dbworker.set_status(user, config.States.S_ENTER_NAME.value)
+@bot.message_handler(func=lambda message: dbworker.get_current_status(user) == config.States.S_ENTER_NAME.value)
+def main_rules(message:telebot.types.Message):
+    global messages
+    global user
+    messages.append(message.text)
+    with get_connection() as conn:
+        dbworker.enter_code(message,messages,conn)
+
+
+    rules='''Основные правила магазинa:
+    1.
+    2.
+    3.'''
+
+
+
+    bot.send_message(message.chat.id, rules,reply_markup=buttons2())
+    dbworker.set_status(user,config.States.S_CHOOSE_ITEM.value)
+@bot.message_handler(content_types=['text'])
 def any_text_message2(message: telebot.types.Message):
     if message.text=="Присоединиться":
         global mass
+        global user
+        dbworker.set_status(user, config.States.S_ENTER_EMAIL.value)
         bot.send_message(message.chat.id,data_input(mass[0]))
+    elif message.text=="Связь с человеком":
+        bot.send_message(message.chat.id,"Свяжитесь  с нашим адином")
+        bot.send_message(message.chat.id,"@fdm195")
+    elif message.text=="Мясо":
+        bot.send_message(message.chat.id,"Выберите из предложенных категорий",reply_markup=buttons3())
+        dbworker.set_status(user,config.States.S_CHOOSE_MEAT.value)
+    elif message.text=="Назад" and dbworker.compare_status(user,config.States.S_CHOOSE_MEAT.value):
+        main_rules(message)
+    elif message.text=="Изменение личных данных":
+        cmd_reset(message)
 
-@bot.message_handler(commands=["reset"])
-def cmd_reset(message:telebot.types.Message):
-    dbworker.set_status(message.chat.id, config.States.S_ENTER_NAME.value)
-    bot.send_message(message.chat.id,f"Данные сброшены.{data_input(mass[0])}")
-# @dp.message_handler(commands="test1")
-# async def cmd_test1(message: types.Message):
-#     await message.reply("Test 1")
-# @dp.message_handler(func=lambda message: dbworker.get_current_status(user) == config.States.S_ENTER_NAME.value)
-# def user_entering_name(message):
-#     # В случае с именем не будем ничего проверять, пусть хоть "25671", хоть Евкакий
-#     message.answer( "Отличное имя, запомню! Теперь укажи, пожалуйста, свой возраст.")
-#     dbworker.set_state(message.chat.id, config.States.S_ENTER_AGE.value)
 
 if __name__ == "__main__":
-    # Запуск бота
-    bot.polling()
+    bot.polling(none_stop=True, timeout=123)
 
 
