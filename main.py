@@ -1,10 +1,11 @@
 import logging
 import telebot
-from button import buttons1,buttons2,buttons3
+from button import buttons1,buttons2,buttons3,buttons4
 from db import get_connection
 import sqlite3
 import config
 import dbworker
+from msg_handler import item_desc,meat_msg
 
 token = '5084341118:AAFHCBMJhqUxDBB2RKrkIPgQODbcnzROIHY'
 
@@ -15,6 +16,8 @@ messages=[]
 mass=['Адрес доставки',"Имя"]
 user_id='1'
 user=config.Users(None,None)
+items=["Утка","Курица","Гусь"]
+order=[]
 
 
 
@@ -75,21 +78,34 @@ def main_rules(message:telebot.types.Message):
     dbworker.set_status(user,config.States.S_CHOOSE_ITEM.value)
 @bot.message_handler(content_types=['text'])
 def any_text_message2(message: telebot.types.Message):
-    if message.text=="Присоединиться":
-        global mass
-        global user
-        dbworker.set_status(user, config.States.S_ENTER_EMAIL.value)
-        bot.send_message(message.chat.id,data_input(mass[0]))
-    elif message.text=="Связь с человеком":
+    global user
+    if message.text=="Связь с человеком":
         bot.send_message(message.chat.id,"Свяжитесь  с нашим адином")
         bot.send_message(message.chat.id,"@fdm195")
+    elif message.text=="Присоединиться":
+        global mass
+
+        dbworker.set_status(user, config.States.S_ENTER_EMAIL.value)
+        bot.send_message(message.chat.id,data_input(mass[0]))
+
     elif message.text=="Мясо":
-        bot.send_message(message.chat.id,"Выберите из предложенных категорий",reply_markup=buttons3())
-        dbworker.set_status(user,config.States.S_CHOOSE_MEAT.value)
-    elif message.text=="Назад" and dbworker.compare_status(user,config.States.S_CHOOSE_MEAT.value):
-        main_rules(message)
+        meat_msg(bot,user,message)
+    elif message.text=="Назад" :
+        if dbworker.compare_status(user,config.States.S_CHOOSE_MEAT.value):
+            main_rules(message)
+        elif dbworker.compare_status(user,config.States.S_MAKE_ORDER):
+            meat_msg(bot,user,message)
+
     elif message.text=="Изменение личных данных":
         cmd_reset(message)
+    elif message.text in items:
+        item_desc(message,bot,'fmgjknknkjnbjnfbnxkb',buttons4())
+        dbworker.set_status(user,config.States.S_MAKE_ORDER)
+    elif message.text.isdigit():
+        bot.send_message(message.chat.id,"Заказ оформлен")
+
+
+
 
 
 if __name__ == "__main__":

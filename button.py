@@ -38,3 +38,15 @@ def buttons3():
 
     keyboard.add(button_1, button_2, button_3, button_4, button_5)
     return keyboard
+
+def buttons4():
+    keyboard = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=False, resize_keyboard=True)
+
+    button_1 = telebot.types.KeyboardButton(text="Купить")
+
+    button_4 = telebot.types.KeyboardButton(text="Связь с человеком")
+
+    button_5 = telebot.types.KeyboardButton(text="Назад")
+
+    keyboard.add(button_1, button_4, button_5)
+    return keyboard
