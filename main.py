@@ -52,7 +52,7 @@ def cmd_reset(message:telebot.types.Message):
 
     users[message.chat.id]=config.States.S_ENTER_EMAIL.value
 
-@bot.message_handler(func=lambda message:try:users[message.chat.id]==config.States.S_ENTER_EMAIL.value)
+@bot.message_handler(func=lambda message:users[message.chat.id]==config.States.S_ENTER_EMAIL.value)
 def user_entering_name(message):
     global messages
     global users
