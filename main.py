@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 messages={}
 user_id='1'
 items=["Утка","Курица","Гусь","Яйца","Молоко"]
-users={97702779:"148"}
+users={616645291:"148"}
 item_to_buy=""
 order=[]
 order_list={}
@@ -52,7 +52,7 @@ def cmd_reset(message:telebot.types.Message):
 
     users[message.chat.id]=config.States.S_ENTER_EMAIL.value
 
-@bot.message_handler(func=lambda message:users[message.chat.id]==config.States.S_ENTER_EMAIL.value)
+@bot.message_handler(func=lambda message:try:users[message.chat.id]==config.States.S_ENTER_EMAIL.value)
 def user_entering_name(message):
     global messages
     global users
