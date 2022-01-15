@@ -1,7 +1,7 @@
 import telebot
 def buttons1():
     keyboard = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    button_1 = telebot.types.KeyboardButton(text="Присоединиться")
+    button_1 = telebot.types.KeyboardButton(text="Каталог")
     keyboard.add(button_1)
     button_2 = telebot.types.KeyboardButton(text="Связь с человеком")
     keyboard.add(button_2)

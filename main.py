@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 messages={}
 user_id='1'
 items=["Утка","Курица","Гусь","Яйца","Молоко"]
-users={}
+users={97702779:"148"}
 item_to_buy=""
 order=[]
 order_list={}
@@ -27,10 +27,18 @@ def start_message(message):
     global user_id
     global users
     user_id=message.chat.id
+    if "148" in users.values():
+        users.clear()
     users.update({message.chat.id:config.States.S_START.value})
-    bot.send_message(message.chat.id,"Вас привествует FarmBot! "+str(users))
-    bot.send_message(message.chat.id, "Введите адресс доставки ")
-    users[user_id]=config.States.S_ENTER_EMAIL.value
+
+    with get_connection() as conn:
+        if dbworker.in_db(message,conn):
+            bot.send_message(message.chat.id, "Вас привествует FarmBot!")
+            bot.send_message(message.chat.id, "Введите адресс доставки ")
+            users[user_id]=config.States.S_ENTER_EMAIL.value
+        else:
+            bot.send_message(message.chat.id, "Вас привествует FarmBot!",reply_markup=buttons1())
+            users[user_id]=config.States.S_ENTER_NAME.value
 
 @bot.message_handler(commands=['reset'])
 def cmd_reset(message:telebot.types.Message):
@@ -58,10 +66,9 @@ def user_entering_name(message):
 def main_rules(message:telebot.types.Message):
     global messages
     global users
-
-    if users[message.chat.id]==config.States.S_ENTER_NAME.value:
-        messages.update({message.text: message.chat.id})
-        with get_connection() as conn:
+    with get_connection() as conn:
+        if users[message.chat.id]==config.States.S_ENTER_NAME.value and dbworker.in_db(message,conn):
+            messages.update({message.text: message.chat.id})
             dbworker.enter_code(message,messages,conn)
 
 
@@ -82,10 +89,6 @@ def any_text_message2(message: telebot.types.Message):
     if message.text=="Связь с человеком":
         bot.send_message(message.chat.id,"Свяжитесь  с нашим адином")
         bot.send_message(message.chat.id,"@fdm195")
-    # elif message.text=="Присоединиться":
-    #
-    #     bot.send_message(message.chat.id, "Введите адресс доставки ")
-    #     dbworker.set_status(user,config.States.S_ENTER_EMAIL.value)
 
     elif message.text=="Мясо":
         meat_msg(bot,users,message)
@@ -123,7 +126,8 @@ def any_text_message2(message: telebot.types.Message):
     elif message.text=="Оформить и отправить заказ":
         with get_connection() as conn:
             bot.send_message(message.chat.id,"Заказ отправлен.",reply_markup=buttons2())
-            line=f'''{dbworker.get_list_items(conn,message)}'''
+            line=f'''{dbworker.get_list_items(conn,message)}
+К оплате:{dbworker.get_cost(conn,message)}'''
             bot.send_message(message.chat.id,line)
             dbworker.send_order(message,conn)
             dbworker.clean_cart(conn,message)

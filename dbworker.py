@@ -4,6 +4,14 @@ import sqlite3
 import telebot
 from msg_handler import item_desc
 
+def in_db(message:telebot.types.Message,conn:sqlite3.Connection):
+    cur=conn.cursor()
+    cur.execute("SELECT Users.name FROM Users WHERE id=?",(message.chat.id,))
+    row=cur.fetchone()
+    cur.close()
+    if row is None:
+        return True
+    return False
 
 
 def enter_code(message:telebot.types.Message,messages:dict,conn:sqlite3.Connection):
