@@ -2,7 +2,6 @@ import logging
 import telebot
 from button import buttons1,buttons2,buttons3,buttons4,buttons5
 from db import get_connection
-import sqlite3
 import config
 import dbworker
 from msg_handler import item_desc,meat_msg,get_by_key
@@ -12,14 +11,13 @@ token = '5084341118:AAFHCBMJhqUxDBB2RKrkIPgQODbcnzROIHY'
 bot = telebot.TeleBot(token)
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
-messages=[]
-mass=['Адрес доставки',"Имя"]
+messages={}
 user_id='1'
-user=config.Users(None,None)
 items=["Утка","Курица","Гусь","Яйца","Молоко"]
+users={}
 item_to_buy=""
 order=[]
-
+order_list={}
 
 
 
@@ -27,43 +25,42 @@ order=[]
 @bot.message_handler(commands=['start'])
 def start_message(message):
     global user_id
-    global user
+    global users
     user_id=message.chat.id
-    user = config.Users(id=user_id, status=config.States.S_START.value)
-
-    bot.send_message(message.chat.id,"Вас привествует FarmBot!", reply_markup=buttons1())
-
-
-def data_input(text):
-    return f"Введите {text}"
+    users.update({message.chat.id:config.States.S_START.value})
+    bot.send_message(message.chat.id,"Вас привествует FarmBot! "+str(users))
+    bot.send_message(message.chat.id, "Введите адресс доставки ")
+    users[user_id]=config.States.S_ENTER_EMAIL.value
 
 @bot.message_handler(commands=['reset'])
 def cmd_reset(message:telebot.types.Message):
     global mass
-    bot.send_message(message.chat.id,f"Данные сброшены.{data_input(mass[0])}")
+    bot.send_message(message.chat.id,f"Данные сброшены.Введите адресс доставки")
     global messages
-    global user
     with get_connection() as conn:
       dbworker.delete_code(message,conn)
     messages.clear()
 
 
-    dbworker.set_status(user, config.States.S_ENTER_EMAIL.value)
+    users[message.chat.id]=config.States.S_ENTER_EMAIL.value
 
-@bot.message_handler(func=lambda message: dbworker.get_current_status(user) == config.States.S_ENTER_EMAIL.value)
+@bot.message_handler(func=lambda message:users[message.chat.id]==config.States.S_ENTER_EMAIL.value)
 def user_entering_name(message):
-    global mass
     global messages
-    messages.append(message.text)
-    bot.send_message(message.chat.id, f"Введите {mass[1]}")
-    global user
-    dbworker.set_status(user, config.States.S_ENTER_NAME.value)
-@bot.message_handler(func=lambda message: dbworker.get_current_status(user) == config.States.S_ENTER_NAME.value)
+    global users
+    global user_id
+
+    bot.send_message(message.chat.id, "Введите имя")
+    messages.update({message.text: message.chat.id})
+    users[message.chat.id]=config.States.S_ENTER_NAME.value
+
+@bot.message_handler(func=lambda message: users[message.chat.id]== config.States.S_ENTER_NAME.value )
 def main_rules(message:telebot.types.Message):
     global messages
-    global user
-    messages.append(message.text)
-    if dbworker.compare_status(user,config.States.S_ENTER_NAME.value):
+    global users
+
+    if users[message.chat.id]==config.States.S_ENTER_NAME.value:
+        messages.update({message.text: message.chat.id})
         with get_connection() as conn:
             dbworker.enter_code(message,messages,conn)
 
@@ -76,26 +73,26 @@ def main_rules(message:telebot.types.Message):
 
 
     bot.send_message(message.chat.id, rules,reply_markup=buttons2())
-    dbworker.set_status(user,config.States.S_CHOOSE_ITEM.value)
+    users[message.chat.id]=config.States.S_CHOOSE_ITEM.value
 @bot.message_handler(content_types=['text'])
 def any_text_message2(message: telebot.types.Message):
-    global user
-    global item_to_buy
+    global users
+    global order_list
+    global user_id
     if message.text=="Связь с человеком":
         bot.send_message(message.chat.id,"Свяжитесь  с нашим адином")
         bot.send_message(message.chat.id,"@fdm195")
-    elif message.text=="Присоединиться":
-        global mass
-
-        dbworker.set_status(user, config.States.S_ENTER_EMAIL.value)
-        bot.send_message(message.chat.id,data_input(mass[0]))
+    # elif message.text=="Присоединиться":
+    #
+    #     bot.send_message(message.chat.id, "Введите адресс доставки ")
+    #     dbworker.set_status(user,config.States.S_ENTER_EMAIL.value)
 
     elif message.text=="Мясо":
-        meat_msg(bot,user,message)
+        meat_msg(bot,users,message)
     elif message.text=="Назад" :
 
-        if dbworker.compare_status(user,config.States.S_MAKE_ORDER.value):
-            meat_msg(bot,user,message)
+        if users[message.chat.id]==config.States.S_MAKE_ORDER.value:
+            meat_msg(bot,users,message)
         else:main_rules(message)
 
 
@@ -103,23 +100,26 @@ def any_text_message2(message: telebot.types.Message):
         cmd_reset(message)
     elif message.text in items:
         item_to_buy=message.text
+        order_list.update({message.chat.id:item_to_buy})
+
+
         with get_connection() as conn:
             line=f'''{item_desc(message,conn)[0]}
 Цена:{item_desc(message,conn)[1]}'''
             bot.send_message(message.chat.id, line, reply_markup=buttons4())
         if message.text in ["Яйца","Молоко"]:
-            dbworker.set_status(user,config.States.S_MAKE_ORDER_MILK.value)
+            users[message.chat.id] =config.States.S_MAKE_ORDER_MILK.value
         elif message.text in ["Утка","Курица","Гусь"]:
-            dbworker.set_status(user,config.States.S_MAKE_ORDER.value)
+            users[message.chat.id]=config.States.S_MAKE_ORDER.value
 
     elif message.text=="Купить":
-        line=f"Сколько {get_by_key(item_to_buy)} вы хотите заказать?"
+        line=f"Сколько {get_by_key(order_list.get(message.chat.id))} вы хотите заказать?"
         bot.send_message(message.chat.id,line)
     elif message.text.isdigit() and int(message.text)>0:
         bot.send_message(message.chat.id,"Заказ добавлен в корзину",reply_markup=buttons5())
         with get_connection() as conn:
-            dbworker.create_order(message,conn,item_to_buy)
-        dbworker.set_status(user,config.States.S_MAKE_ORDER_MILK.value)
+            dbworker.create_order(message,conn,order_list.get(message.chat.id))
+        users[message.chat.id]=config.States.S_MAKE_ORDER_MILK.value
     elif message.text=="Оформить и отправить заказ":
         with get_connection() as conn:
             bot.send_message(message.chat.id,"Заказ отправлен.",reply_markup=buttons2())
