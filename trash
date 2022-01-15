@@ -1,0 +1,6 @@
+INSERT INTO Orders (byer_id,item,cost) VALUES (616645291,"f",2)
+
+Сколько {get_by_key(message.text)} вы хотите заказать?
+
+
+DELETE  FROM Users
