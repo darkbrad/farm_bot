@@ -131,14 +131,14 @@ def any_text_message2(message: telebot.types.Message):
             line=f'''{dbworker.get_list_items(conn,message)}
 К оплате:{dbworker.get_cost(conn,message)}'''
             bot.send_message(message.chat.id,line)
-            dbworker.send_order(message,conn)
-            dbworker.clean_cart(conn,message)
+
             line=f'''Покупатель:{dbworker.get_adress_get_name(conn,message)[1]} 
 По адрессу {dbworker.get_adress_get_name(conn,message)[0]}
 Товары для доставки: {dbworker.get_list_items(conn,message)}
 Стоимость:{dbworker.get_cost(conn,message)}'''
             bot.send_message(97702779,line)
-
+            dbworker.send_order(message,conn)
+            dbworker.clean_cart(conn,message)
 
 
 
@@ -147,6 +147,6 @@ def any_text_message2(message: telebot.types.Message):
 
 
 if __name__ == "__main__":
-    bot.polling(none_stop=True, timeout=123)
+    bot.infinity_polling()
 
 
