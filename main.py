@@ -1,5 +1,7 @@
 import logging
 import telebot
+
+import msg_handler
 from button import buttons1,buttons2,buttons3,buttons4,buttons5
 from db import get_connection
 import config
@@ -14,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 messages={}
 user_id='1'
 items=["Утка","Курица","Гусь","Яйца","Молоко"]
-users={616645291:"148"}
+users={397867256:"148"}
 item_to_buy=""
 order=[]
 order_list={}
@@ -52,7 +54,7 @@ def cmd_reset(message:telebot.types.Message):
 
     users[message.chat.id]=config.States.S_ENTER_EMAIL.value
 
-@bot.message_handler(func=lambda message:users[message.chat.id]==config.States.S_ENTER_EMAIL.value)
+@bot.message_handler(func=lambda message: msg_handler.compare(users,message,config.States.S_ENTER_EMAIL.value))
 def user_entering_name(message):
     global messages
     global users
@@ -62,7 +64,7 @@ def user_entering_name(message):
     messages.update({message.text: message.chat.id})
     users[message.chat.id]=config.States.S_ENTER_NAME.value
 
-@bot.message_handler(func=lambda message: users[message.chat.id]== config.States.S_ENTER_NAME.value )
+@bot.message_handler(func=lambda message: msg_handler.compare(users,message,config.States.S_ENTER_NAME.value))
 def main_rules(message:telebot.types.Message):
     global messages
     global users

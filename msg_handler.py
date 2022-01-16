@@ -1,6 +1,4 @@
 import sqlite3
-
-import dbworker
 import config
 import telebot
 from button import buttons3
@@ -47,3 +45,5 @@ def meat_msg(bot,users:dict,message):
     bot.send_message(message.chat.id,'''Нажмите "Купить" для дальнейшего оформления заказа ''')
     users[message.chat.id]=config.States.S_CHOOSE_MEAT.value
 
+def compare(users:dict,message:telebot.types.Message,status):
+    return users[message.chat.id]==status
