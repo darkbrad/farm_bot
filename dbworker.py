@@ -33,7 +33,7 @@ def delete_code(message:telebot.types.Message,conn:sqlite3.Connection):
 def create_order(message:telebot.types.Message,conn:sqlite3.Connection,item:str):
     cur=conn.cursor()
     byer_id=message.chat.id
-    cost=(item_desc(item,conn)[1])
+    cost=item_desc(item,conn)[1]
     cur.execute(f"INSERT INTO Cart (byer_id,item,cost,amount) VALUES (?,?,?,?)",(byer_id,item,cost,message.text))
     cur.close()
 
@@ -73,3 +73,9 @@ def clean_cart(conn:sqlite3.Connection,message:telebot.types.Message):
     cur=conn.cursor()
     cur.execute("DELETE FROM Cart WHERE byer_id=?",(message.chat.id,))
     cur.close()
+def get_adress_get_name(conn:sqlite3.Connection,message:telebot.types.Message):
+    cur=conn.cursor()
+    cur.execute("SELECT Users.adress,Users.name FROM Users WHERE id=?",(message.chat.id,))
+    row=cur.fetchone()
+    cur.close()
+    return row

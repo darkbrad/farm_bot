@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 messages={}
 user_id='1'
 items=["Утка","Курица","Гусь","Яйца","Молоко"]
-users={397867256:"148"}
+users={}
 item_to_buy=""
 order=[]
 order_list={}
@@ -109,8 +109,8 @@ def any_text_message2(message: telebot.types.Message):
 
 
         with get_connection() as conn:
-            line=f'''{item_desc(message,conn)[0]}
-Цена:{item_desc(message,conn)[1]}'''
+            line=f'''{item_desc(message.text,conn)[0]}
+Цена:{item_desc(message.text,conn)[1]}'''
             bot.send_message(message.chat.id, line, reply_markup=buttons4())
         if message.text in ["Яйца","Молоко"]:
             users[message.chat.id] =config.States.S_MAKE_ORDER_MILK.value
@@ -133,6 +133,11 @@ def any_text_message2(message: telebot.types.Message):
             bot.send_message(message.chat.id,line)
             dbworker.send_order(message,conn)
             dbworker.clean_cart(conn,message)
+            line=f'''Покупатель:{dbworker.get_adress_get_name(conn,message)[1]} 
+По адрессу {dbworker.get_adress_get_name(conn,message)[0]}
+Товары для доставки: {dbworker.get_list_items(conn,message)}
+Стоимость:{dbworker.get_cost(conn,message)}'''
+            bot.send_message(97702779,line)
 
 
 

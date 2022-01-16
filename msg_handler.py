@@ -27,15 +27,15 @@ def get_by_key(key:str):
         "Молоко":"литров молока"}
     value=dict.get(key)
     return value
-def item_desc(message:telebot.types.Message,conn:sqlite3.Connection):
+def item_desc(message:str,conn:sqlite3.Connection):
     cur=conn.cursor()
-    if type(message)==str:
-        cur.execute("SELECT description, price FROM Items WHERE name=?", (message,))
-    else:cur.execute("SELECT description, price FROM Items WHERE name=?",(message.text,))
-    row=cur.fetchone()
-    desc,price=row
-    cur.close()
-    return desc,price
+    if True:
+        cur.execute("SELECT Items.description, Items.price FROM Items WHERE name=?",(str(message),))
+        row = cur.fetchone()
+        cur.close()
+        return row
+
+
 
 
 
@@ -46,4 +46,7 @@ def meat_msg(bot,users:dict,message):
     users[message.chat.id]=config.States.S_CHOOSE_MEAT.value
 
 def compare(users:dict,message:telebot.types.Message,status):
-    return users[message.chat.id]==status
+    try:
+        return users[message.chat.id] == status
+    except KeyError:
+        return False
