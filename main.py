@@ -106,7 +106,7 @@ def any_text_message2(message: telebot.types.Message):
     elif message.text in items:
         item_to_buy=message.text
         order_list.update({message.chat.id:item_to_buy})
-
+        bot.send_message(message.chat.id, '''Нажмите "Купить" для дальнейшего оформления заказа ''')
 
         with get_connection() as conn:
             line=f'''{item_desc(message.text,conn)[0]}

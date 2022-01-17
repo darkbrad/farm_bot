@@ -42,7 +42,7 @@ def item_desc(message:str,conn:sqlite3.Connection):
 
 def meat_msg(bot,users:dict,message):
     bot.send_message(message.chat.id, '''Выберите из предложенных категорий''', reply_markup=buttons3())
-    bot.send_message(message.chat.id,'''Нажмите "Купить" для дальнейшего оформления заказа ''')
+
     users[message.chat.id]=config.States.S_CHOOSE_MEAT.value
 
 def compare(users:dict,message:telebot.types.Message,status):
