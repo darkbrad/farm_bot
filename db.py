@@ -1,7 +1,7 @@
 import sqlite3
 from typing import Iterator
 from contextlib import contextmanager
-from variables import DB_FILE
+DB_FILE= "/home/gleb_fomichov/farm_bot/data/data.db"
 
 
 @contextmanager
