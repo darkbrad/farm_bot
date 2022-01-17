@@ -146,6 +146,6 @@ def any_text_message2(message: telebot.types.Message):
 
 
 if __name__ == "__main__":
-    bot.infinity_polling()
+    bot.polling(none_stop=True)
 
 
