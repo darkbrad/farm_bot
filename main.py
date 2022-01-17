@@ -45,7 +45,7 @@ def start_message(message):
 @bot.message_handler(commands=['reset'])
 def cmd_reset(message:telebot.types.Message):
     global mass
-    bot.send_message(message.chat.id,f"Данные сброшены.Введите адресс доставки")
+    bot.send_message(message.chat.id,f"Данные сброшены.Введите адрес доставки")
     global messages
     with get_connection() as conn:
       dbworker.delete_code(message,conn)
@@ -133,7 +133,7 @@ def any_text_message2(message: telebot.types.Message):
             bot.send_message(message.chat.id,line)
 
             line=f'''Покупатель:{dbworker.get_adress_get_name(conn,message)[1]} 
-По адрессу {dbworker.get_adress_get_name(conn,message)[0]}
+По адресу {dbworker.get_adress_get_name(conn,message)[0]}
 Товары для доставки: {dbworker.get_list_items(conn,message)}
 Стоимость:{dbworker.get_cost(conn,message)}'''
             bot.send_message(97702779,line)
