@@ -7,8 +7,7 @@ from db import get_connection
 import config
 import dbworker
 from msg_handler import item_desc,meat_msg,get_by_key
-
-token = '5084341118:AAFHCBMJhqUxDBB2RKrkIPgQODbcnzROIHY'
+from variables import token
 
 bot = telebot.TeleBot(token)
 # Включаем логирование, чтобы не пропустить важные сообщения
